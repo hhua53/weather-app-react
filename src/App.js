@@ -1,10 +1,30 @@
-import React, { useState } from 'react'
 import axios from 'axios';
+import React, { useEffect, useState } from "react";
 
 function App() {
-  const [data, setData] = useState({})
-  const [location, setLocation] = useState('')
-  const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=imperial&appid=53cc68673eadc451dea3863032016359`
+  const [data, setData] = useState({});
+  const [location, setLocation] = useState('');
+  const [lat, setLat] = useState(null);
+  const [long, setLong] = useState(null);
+  const url = `https://api.openweathermap.org/data/2.5/weather?q=${location}&units=metric&appid=53cc68673eadc451dea3863032016359`
+
+  useEffect(() => {
+    const fetchData = () => {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        setLat(position.coords.latitude);
+        setLong(position.coords.longitude);
+      });
+
+      if (lat !== null && long !== null ){
+        fetch(`${process.env.REACT_APP_API_URL}/weather/?lat=${lat}&lon=${long}&units=metric&APPID=${process.env.REACT_APP_API_KEY}`)
+        .then(res => res.json())
+        .then(result => {
+          setData(result)
+        });
+      }
+    }
+    fetchData();
+  }, [lat,long])
 
   const searchLocation = (event) => {
     if (event.key === 'Enter') {
@@ -39,7 +59,7 @@ function App() {
           </div>
         </div>
 
-        {data.name != undefined &&
+        {data.name !== undefined &&
           <div className="bottom">
             <div className="feels">
               {data.main ? <p className='bold'>{data.main.feels_like.toFixed()}&deg;F</p> : null}
